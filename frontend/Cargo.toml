@@ -1,0 +1,24 @@
+[package]
+name = "nekotimer-frontend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nekotimer-shared = { path = "../shared" }
+yew = { version = "0.21", features = ["csr"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "console",
+    "DragEvent",
+    "DataTransfer",
+    "HtmlElement",
+    "HtmlInputElement",
+    "Window",
+] }
+gloo-net = { version = "0.6", features = ["http"] }
+gloo-dialogs = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+wasm-logger = "0.2"
