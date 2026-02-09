@@ -18,7 +18,11 @@ pub fn sidebar() -> Html {
         })
     };
 
-    let has_saved = state.last_saved_id.is_some();
+    let can_execute = state.editing_timer
+        .as_ref()
+        .map(|t| !t.id.is_empty())
+        .unwrap_or(false)
+        && !state.form_dirty;
 
     html! {
         <div class="sidebar">
@@ -48,7 +52,7 @@ pub fn sidebar() -> Html {
             </ul>
             <div class="sidebar-actions">
                 <button class="btn btn-add" onclick={on_add}>{"Add"}</button>
-                if has_saved {
+                if can_execute {
                     <button class="btn btn-success" onclick={on_execute}>{"実行"}</button>
                 }
             </div>

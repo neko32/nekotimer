@@ -19,6 +19,7 @@ pub struct AppState {
     pub dragging_new_block: Option<String>,
     pub validation_errors: Vec<String>,
     pub last_saved_id: Option<String>,
+    pub form_dirty: bool,
 }
 
 impl Default for AppState {
@@ -31,6 +32,7 @@ impl Default for AppState {
             dragging_new_block: None,
             validation_errors: Vec::new(),
             last_saved_id: None,
+            form_dirty: false,
         }
     }
 }
@@ -64,6 +66,7 @@ impl Reducible for AppState {
             AppAction::StartNewTimer => {
                 next.view = ViewMode::Builder;
                 next.validation_errors.clear();
+                next.form_dirty = false;
                 next.editing_timer = Some(TimerConfig {
                     id: String::new(),
                     name: String::new(),
@@ -78,24 +81,28 @@ impl Reducible for AppState {
                 if let Some(timer) = next.timers.iter().find(|t| t.id == id) {
                     next.view = ViewMode::Builder;
                     next.validation_errors.clear();
+                    next.form_dirty = false;
                     next.editing_timer = Some(timer.clone());
                 }
             }
             AppAction::SetTimerName(name) => {
                 if let Some(ref mut timer) = next.editing_timer {
                     timer.name = name;
+                    next.form_dirty = true;
                 }
             }
             AppAction::AddBlock(block, index) => {
                 if let Some(ref mut timer) = next.editing_timer {
                     let idx = index.min(timer.blocks.len());
                     timer.blocks.insert(idx, block);
+                    next.form_dirty = true;
                 }
             }
             AppAction::RemoveBlock(index) => {
                 if let Some(ref mut timer) = next.editing_timer {
                     if index < timer.blocks.len() && timer.blocks.len() > 1 {
                         timer.blocks.remove(index);
+                        next.form_dirty = true;
                     }
                 }
             }
@@ -103,6 +110,7 @@ impl Reducible for AppState {
                 if let Some(ref mut timer) = next.editing_timer {
                     if index < timer.blocks.len() {
                         timer.blocks[index] = block;
+                        next.form_dirty = true;
                     }
                 }
             }
@@ -116,6 +124,7 @@ impl Reducible for AppState {
                             to.min(timer.blocks.len())
                         };
                         timer.blocks.insert(adjusted_to, block);
+                        next.form_dirty = true;
                     }
                 }
             }
@@ -140,6 +149,7 @@ impl Reducible for AppState {
                 }
                 next.editing_timer = Some(timer);
                 next.validation_errors.clear();
+                next.form_dirty = false;
             }
             AppAction::SetValidationErrors(errors) => {
                 next.validation_errors = errors;
