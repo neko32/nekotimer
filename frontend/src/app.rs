@@ -3,6 +3,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::components::content_pane::ContentPane;
 use crate::components::sidebar::Sidebar;
+use crate::components::unsaved_changes_modal::UnsavedChangesModal;
 use crate::services::api;
 use crate::state::{AppAction, AppState, AppStateContext};
 
@@ -23,11 +24,16 @@ pub fn app() -> Html {
         });
     }
 
+    let show_modal = state.pending_navigation.is_some();
+
     html! {
         <ContextProvider<AppStateContext> context={state}>
             <div class="app-container">
                 <Sidebar />
                 <ContentPane />
+                if show_modal {
+                    <UnsavedChangesModal />
+                }
             </div>
         </ContextProvider<AppStateContext>>
     }

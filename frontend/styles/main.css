@@ -91,6 +91,9 @@ body {
 }
 
 .sidebar-timer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 12px 16px;
     margin-bottom: 4px;
     border-radius: var(--border-radius);
@@ -98,6 +101,20 @@ body {
     transition: all var(--transition-speed);
     font-size: 0.95rem;
     border-left: 3px solid transparent;
+}
+
+.sidebar-timer-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-timer-item .btn-run {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    font-size: 0.8rem;
 }
 
 .sidebar-timer-item:hover {
@@ -137,6 +154,65 @@ body {
     height: 60vh;
     color: var(--color-secondary-light);
     font-size: 1.1rem;
+}
+
+/* ===== Timer View (プレビュー・非編集) ===== */
+.timer-view {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.timer-view-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--color-primary);
+    margin: 0;
+}
+
+.timer-view-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.timer-view-block {
+    padding: 16px 20px;
+    background: rgba(114, 151, 197, 0.08);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--color-primary-light);
+}
+
+.timer-view-block-type-row {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.timer-view-block-type {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.timer-view-block-name {
+    font-weight: 500;
+    color: var(--color-secondary);
+}
+
+.timer-view-block-detail {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    padding-left: 4px;
+}
+
+.timer-view-actions {
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
 }
 
 /* ===== Timer Builder ===== */
@@ -431,6 +507,60 @@ body {
 .save-btn {
     align-self: flex-start;
     min-width: 160px;
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 2px solid var(--color-error);
+    color: var(--color-error);
+}
+
+.btn-outline-danger:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+/* ===== Modal (未保存ワーニング) ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-box {
+    background: var(--color-bg-content);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    max-width: 440px;
+    width: 100%;
+    padding: 28px 32px;
+}
+
+.unsaved-modal .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 16px 0;
+    padding: 0;
+    border: none;
+}
+
+.unsaved-modal .modal-message {
+    font-size: 0.95rem;
+    color: var(--color-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
 }
 
 /* ===== Validation Errors ===== */

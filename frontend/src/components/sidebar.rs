@@ -12,49 +12,59 @@ pub fn sidebar() -> Html {
         })
     };
 
-    let on_execute = {
-        Callback::from(move |_: MouseEvent| {
-            gloo_dialogs::alert("タイマー実行予定");
-        })
-    };
-
-    let can_execute = state.editing_timer
-        .as_ref()
-        .map(|t| !t.id.is_empty())
-        .unwrap_or(false)
-        && !state.form_dirty;
-
     html! {
         <div class="sidebar">
             <h2>{"nekotimer"}</h2>
             <ul class="sidebar-timer-list">
                 { for state.timers.iter().map(|timer| {
                     let id = timer.id.clone();
+                    let timer_name = timer.name.clone();
                     let is_active = state.editing_timer
                         .as_ref()
                         .map(|t| t.id == timer.id)
                         .unwrap_or(false);
+                    let can_execute = !timer.id.is_empty();
                     let class = if is_active {
                         "sidebar-timer-item active"
                     } else {
                         "sidebar-timer-item"
                     };
-                    let state = state.clone();
-                    let onclick = Callback::from(move |_: MouseEvent| {
-                        state.dispatch(AppAction::EditTimer(id.clone()));
+                    let state_for_select = state.clone();
+                    let state_for_enter = state.clone();
+                    let id_for_select = id.clone();
+                    let id_for_preview = id.clone();
+                    let on_select = Callback::from(move |_: MouseEvent| {
+                        state_for_select.dispatch(AppAction::EditTimer(id_for_select.clone()));
+                    });
+                    let on_mouse_enter = Callback::from(move |_: MouseEvent| {
+                        state_for_enter.dispatch(AppAction::PreviewTimer(Some(id_for_preview.clone())));
+                    });
+                    let on_execute = Callback::from(move |e: MouseEvent| {
+                        e.stop_propagation();
+                        gloo_dialogs::alert(&format!("タイマー実行予定: {}", id));
                     });
                     html! {
-                        <li {class} {onclick}>
-                            { &timer.name }
+                        <li
+                            {class}
+                            onclick={on_select}
+                            onmouseenter={on_mouse_enter}
+                        >
+                            <span class="sidebar-timer-name">{ &timer_name }</span>
+                            if can_execute {
+                                <button
+                                    class="btn btn-success btn-run"
+                                    onclick={on_execute}
+                                    title="実行"
+                                >
+                                    {"実行"}
+                                </button>
+                            }
                         </li>
                     }
                 })}
             </ul>
             <div class="sidebar-actions">
                 <button class="btn btn-add" onclick={on_add}>{"Add"}</button>
-                if can_execute {
-                    <button class="btn btn-success" onclick={on_execute}>{"実行"}</button>
-                }
             </div>
         </div>
     }

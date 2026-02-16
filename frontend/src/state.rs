@@ -8,6 +8,16 @@ pub type AppStateContext = UseReducerHandle<AppState>;
 pub enum ViewMode {
     NoContent,
     Builder,
+    /// サイドバーでマウスオーバーしたタイマーのプレビュー表示用（非編集）
+    ViewTimer(String),
+}
+
+/// 未保存のまま遷移しようとしたときの保留先
+#[derive(Clone, Debug, PartialEq)]
+pub enum PendingNavigation {
+    ToViewTimer(String),
+    ToEditTimer(String),
+    ToNewTimer,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -20,6 +30,10 @@ pub struct AppState {
     pub validation_errors: Vec<String>,
     pub last_saved_id: Option<String>,
     pub form_dirty: bool,
+    /// 未保存確認モーダルで選択待ちの遷移先
+    pub pending_navigation: Option<PendingNavigation>,
+    /// 編集を続ける選択後、ビルダーのタイマー名入力にフォーカスするフラグ
+    pub focus_builder_name: bool,
 }
 
 impl Default for AppState {
@@ -33,6 +47,8 @@ impl Default for AppState {
             validation_errors: Vec::new(),
             last_saved_id: None,
             form_dirty: false,
+            pending_navigation: None,
+            focus_builder_name: false,
         }
     }
 }
@@ -40,6 +56,8 @@ impl Default for AppState {
 pub enum AppAction {
     SetTimers(Vec<TimerConfig>),
     StartNewTimer,
+    /// サイドバーでタイマーにマウスオーバーしたときにプレビュー表示。None でプレビュー解除。
+    PreviewTimer(Option<String>),
     EditTimer(String),
     SetTimerName(String),
     AddBlock(TimerBlock, usize),
@@ -51,6 +69,12 @@ pub enum AppAction {
     StopDragging,
     SaveSuccess(TimerConfig),
     SetValidationErrors(Vec<String>),
+    /// 未保存確認で「編集を止める」→ 破棄して遷移を実行
+    ConfirmDiscard,
+    /// 未保存確認で「編集を続ける」→ モーダルを閉じてビルダーに留まる
+    CancelNavigate,
+    /// ビルダー名入力へフォーカス済みの通知（フラグクリア用）
+    ClearFocusBuilderName,
 }
 
 impl Reducible for AppState {
@@ -64,6 +88,10 @@ impl Reducible for AppState {
                 next.timers = timers;
             }
             AppAction::StartNewTimer => {
+                if next.view == ViewMode::Builder && next.form_dirty {
+                    next.pending_navigation = Some(PendingNavigation::ToNewTimer);
+                    return Rc::new(next);
+                }
                 next.view = ViewMode::Builder;
                 next.validation_errors.clear();
                 next.form_dirty = false;
@@ -77,7 +105,23 @@ impl Reducible for AppState {
                     })],
                 });
             }
+            AppAction::PreviewTimer(opt_id) => {
+                if let Some(ref id) = opt_id {
+                    if next.view == ViewMode::Builder && next.form_dirty {
+                        next.pending_navigation = Some(PendingNavigation::ToViewTimer(id.clone()));
+                        return Rc::new(next);
+                    }
+                }
+                next.view = match opt_id {
+                    Some(id) => ViewMode::ViewTimer(id),
+                    None => ViewMode::NoContent,
+                };
+            }
             AppAction::EditTimer(id) => {
+                if next.view == ViewMode::Builder && next.form_dirty {
+                    next.pending_navigation = Some(PendingNavigation::ToEditTimer(id.clone()));
+                    return Rc::new(next);
+                }
                 if let Some(timer) = next.timers.iter().find(|t| t.id == id) {
                     next.view = ViewMode::Builder;
                     next.validation_errors.clear();
@@ -153,6 +197,42 @@ impl Reducible for AppState {
             }
             AppAction::SetValidationErrors(errors) => {
                 next.validation_errors = errors;
+            }
+            AppAction::ConfirmDiscard => {
+                if let Some(pending) = next.pending_navigation.take() {
+                    next.form_dirty = false;
+                    next.validation_errors.clear();
+                    match pending {
+                        PendingNavigation::ToViewTimer(id) => {
+                            next.view = ViewMode::ViewTimer(id);
+                        }
+                        PendingNavigation::ToEditTimer(id) => {
+                            if let Some(timer) = next.timers.iter().find(|t| t.id == id) {
+                                next.view = ViewMode::Builder;
+                                next.editing_timer = Some(timer.clone());
+                            }
+                        }
+                        PendingNavigation::ToNewTimer => {
+                            next.view = ViewMode::Builder;
+                            next.editing_timer = Some(TimerConfig {
+                                id: String::new(),
+                                name: String::new(),
+                                blocks: vec![TimerBlock::Wait(WaitBlock {
+                                    name: "default".into(),
+                                    minutes: 0,
+                                    seconds: 10,
+                                })],
+                            });
+                        }
+                    }
+                }
+            }
+            AppAction::CancelNavigate => {
+                next.pending_navigation = None;
+                next.focus_builder_name = true;
+            }
+            AppAction::ClearFocusBuilderName => {
+                next.focus_builder_name = false;
             }
         }
 

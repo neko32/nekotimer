@@ -9,6 +9,21 @@ use crate::state::{AppAction, AppStateContext};
 #[function_component(TimerBuilder)]
 pub fn timer_builder() -> Html {
     let state = use_context::<AppStateContext>().expect("no context found");
+    let name_input_ref = use_node_ref();
+
+    {
+        let name_input_ref = name_input_ref.clone();
+        let state = state.clone();
+        use_effect_with(state.focus_builder_name, move |should_focus| {
+            if *should_focus {
+                if let Some(input) = name_input_ref.cast::<HtmlInputElement>() {
+                    let _ = input.focus();
+                }
+                state.dispatch(AppAction::ClearFocusBuilderName);
+            }
+            || ()
+        });
+    }
 
     let timer = match &state.editing_timer {
         Some(t) => t.clone(),
@@ -67,6 +82,7 @@ pub fn timer_builder() -> Html {
             <div class="builder-name-section">
                 <label for="timer-name">{"タイマー名"}</label>
                 <input
+                    ref={name_input_ref}
                     id="timer-name"
                     class="timer-name-input"
                     type="text"
