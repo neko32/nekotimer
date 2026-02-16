@@ -1,4 +1,9 @@
+use std::cell::Cell;
+use std::rc::Rc;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+
+use crate::services::timer_runner;
 use crate::state::{AppAction, AppStateContext};
 
 #[function_component(Sidebar)]
@@ -39,9 +44,17 @@ pub fn sidebar() -> Html {
                     let on_mouse_enter = Callback::from(move |_: MouseEvent| {
                         state_for_enter.dispatch(AppAction::PreviewTimer(Some(id_for_preview.clone())));
                     });
+                    let timer_to_run = timer.clone();
+                    let state_for_runner = state.clone();
                     let on_execute = Callback::from(move |e: MouseEvent| {
                         e.stop_propagation();
-                        gloo_dialogs::alert(&format!("タイマー実行予定: {}", id));
+                        let config = timer_to_run.clone();
+                        let state = state_for_runner.clone();
+                        let cancel_token = Rc::new(Cell::new(false));
+                        state.dispatch(AppAction::StartTimerExecution(config.clone(), cancel_token.clone()));
+                        spawn_local(async move {
+                            timer_runner::run_timer(config, cancel_token, state).await;
+                        });
                     });
                     html! {
                         <li

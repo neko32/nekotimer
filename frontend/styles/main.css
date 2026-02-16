@@ -563,6 +563,128 @@ body {
     justify-content: flex-end;
 }
 
+/* ===== 実行中モーダル ===== */
+.running-timer-modal-overlay {
+    z-index: 1001;
+}
+
+.running-timer-modal {
+    max-width: 420px;
+}
+
+.running-timer-modal-header {
+    margin-bottom: 20px;
+}
+
+.running-timer-modal-header .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 8px 0;
+    padding: 0;
+    border: none;
+}
+
+.running-timer-name {
+    font-size: 0.95rem;
+    color: var(--color-secondary);
+    margin: 0;
+}
+
+.running-timer-block-list {
+    list-style: none;
+    margin: 0 0 24px 0;
+    padding: 0;
+}
+
+.running-timer-block-item {
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border-radius: var(--border-radius);
+    border-left: 4px solid transparent;
+    background: rgba(114, 151, 197, 0.06);
+    font-size: 0.9rem;
+}
+
+.running-timer-block-item.current {
+    background: rgba(114, 151, 197, 0.18);
+    border-left-color: var(--color-primary);
+    font-weight: 500;
+}
+
+.running-timer-block-item.done {
+    background: rgba(0, 0, 0, 0.04);
+    border-left-color: var(--color-secondary-light);
+    color: var(--color-secondary);
+}
+
+.running-timer-block-item.done .block-type,
+.running-timer-block-item.done .block-name,
+.running-timer-block-item.done .block-config {
+    color: var(--color-secondary);
+    font-weight: normal;
+}
+
+.running-timer-block-item .block-config {
+    font-size: 0.85rem;
+    color: var(--color-secondary);
+    margin-top: 4px;
+}
+
+.running-timer-block-item .block-type {
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-right: 8px;
+}
+
+.running-timer-block-item .block-countdown-run {
+    margin-top: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+}
+
+.running-timer-block-item .block-phase-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.running-timer-block-item .block-phase {
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: rgba(114, 151, 197, 0.12);
+    color: var(--color-secondary);
+}
+
+.running-timer-block-item .block-phase.active {
+    background: var(--color-primary);
+    color: white;
+    font-weight: 600;
+}
+
+.running-timer-block-item .block-remaining {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+.running-timer-complete {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-success);
+    text-align: center;
+    padding: 28px 0;
+    margin-bottom: 16px;
+}
+
+.running-timer-modal-actions {
+    justify-content: center;
+}
+
 /* ===== Validation Errors ===== */
 .validation-errors {
     background-color: #fdf0ef;

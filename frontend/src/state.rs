@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::rc::Rc;
 use yew::prelude::*;
 use nekotimer_shared::{TimerConfig, TimerBlock, WaitBlock};
@@ -20,6 +21,40 @@ pub enum PendingNavigation {
     ToNewTimer,
 }
 
+/// カウントダウンブロック内のどちらの区間を実行中か
+#[derive(Clone, Debug, PartialEq)]
+pub enum CountdownPhase {
+    /// カウントダウン区間
+    Countdown,
+    /// インターバル待機区間
+    Interval,
+}
+
+/// タイマー実行中モーダル用の状態。閉じたら cancel_token を true にして実行中止。
+#[derive(Clone, Debug)]
+pub struct RunningInfo {
+    pub timer: TimerConfig,
+    pub current_block_index: usize,
+    pub remaining_secs: u32,
+    pub is_complete: bool,
+    pub cancel_token: Rc<Cell<bool>>,
+    /// カウントダウンブロック時のみ: (現在の回数 1-based, 繰り返し回数)
+    pub countdown_run: Option<(u32, u32)>,
+    /// カウントダウンブロック時のみ: 現在カウントダウン中かインターバル中か
+    pub countdown_phase: Option<CountdownPhase>,
+}
+
+impl PartialEq for RunningInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.timer == other.timer
+            && self.current_block_index == other.current_block_index
+            && self.remaining_secs == other.remaining_secs
+            && self.is_complete == other.is_complete
+            && self.countdown_run == other.countdown_run
+            && self.countdown_phase == other.countdown_phase
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct AppState {
     pub timers: Vec<TimerConfig>,
@@ -34,6 +69,8 @@ pub struct AppState {
     pub pending_navigation: Option<PendingNavigation>,
     /// 編集を続ける選択後、ビルダーのタイマー名入力にフォーカスするフラグ
     pub focus_builder_name: bool,
+    /// タイマー実行中モーダル（あるときのみ表示）
+    pub running: Option<RunningInfo>,
 }
 
 impl Default for AppState {
@@ -49,6 +86,7 @@ impl Default for AppState {
             form_dirty: false,
             pending_navigation: None,
             focus_builder_name: false,
+            running: None,
         }
     }
 }
@@ -75,6 +113,21 @@ pub enum AppAction {
     CancelNavigate,
     /// ビルダー名入力へフォーカス済みの通知（フラグクリア用）
     ClearFocusBuilderName,
+    /// タイマー実行開始（モーダル表示用。runner は Sidebar で spawn）
+    StartTimerExecution(TimerConfig, Rc<Cell<bool>>),
+    /// 実行中のブロック・残り秒数の更新（カウントダウン時は回数とフェーズも）
+    SetRunningProgress {
+        block_ix: usize,
+        remaining_secs: u32,
+        countdown_run: Option<(u32, u32)>,
+        countdown_phase: Option<CountdownPhase>,
+    },
+    /// 全ブロック実行完了
+    TimerExecutionComplete,
+    /// モーダルを閉じて実行を中止（cancel_token を立てる）
+    CloseRunningModal,
+    /// 実行が中止 or 完了したので running をクリア
+    TimerExecutionStopped,
 }
 
 impl Reducible for AppState {
@@ -233,6 +286,44 @@ impl Reducible for AppState {
             }
             AppAction::ClearFocusBuilderName => {
                 next.focus_builder_name = false;
+            }
+            AppAction::StartTimerExecution(timer, cancel_token) => {
+                next.running = Some(RunningInfo {
+                    timer,
+                    current_block_index: 0,
+                    remaining_secs: 0,
+                    is_complete: false,
+                    cancel_token,
+                    countdown_run: None,
+                    countdown_phase: None,
+                });
+            }
+            AppAction::SetRunningProgress {
+                block_ix,
+                remaining_secs,
+                countdown_run,
+                countdown_phase,
+            } => {
+                if let Some(ref mut r) = next.running {
+                    r.current_block_index = block_ix;
+                    r.remaining_secs = remaining_secs;
+                    r.countdown_run = countdown_run;
+                    r.countdown_phase = countdown_phase;
+                }
+            }
+            AppAction::TimerExecutionComplete => {
+                if let Some(ref mut r) = next.running {
+                    r.is_complete = true;
+                }
+            }
+            AppAction::CloseRunningModal => {
+                if let Some(ref r) = next.running {
+                    r.cancel_token.set(true);
+                }
+                next.running = None;
+            }
+            AppAction::TimerExecutionStopped => {
+                next.running = None;
             }
         }
 

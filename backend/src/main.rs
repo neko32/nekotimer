@@ -10,9 +10,11 @@ pub struct AppState {
     pub config_path: String,
 }
 
+const DEFAULT_CONFIG_PATH: &str = "timer.config";
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let config_path = "timer.config".to_string();
+    let config_path = std::env::var("TIMER_CONFIG_PATH").unwrap_or_else(|_| DEFAULT_CONFIG_PATH.to_string());
     let config = persistence::load_config(&config_path).unwrap_or_default();
 
     println!("nekotimer backend starting on http://127.0.0.1:14990");
