@@ -1,0 +1,17 @@
+[Unit]
+Description=Nekotimer Backend Server
+After=network.target
+
+[Service]
+Type=simple
+User=neko32
+Group=neko32
+WorkingDirectory=/opt/srv
+ExecStart=/opt/srv/nekotimer-backend
+Restart=on-failure
+RestartSec=5
+# DB を別ディレクトリにしたい場合:
+Environment=TIMER_CONFIG_PATH=/home/neko32/conf/nekotimer/nekotimer_neko32.config
+
+[Install]
+WantedBy=multi-user.target
