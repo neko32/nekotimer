@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 use gloo_timers::future::TimeoutFuture;
 use nekotimer_shared::{CountdownBlock, TimerBlock, TimerConfig, WaitBlock};
-use web_sys::HtmlAudioElement;
+use web_sys::{AudioContext, HtmlAudioElement};
 
 use crate::state::{AppAction, CountdownPhase, AppStateContext};
 
@@ -20,6 +20,25 @@ const SOUND_COUNTDOWN_BLK_NEXT: &str = "/sound/countdown_blk_next.mp3";
 
 thread_local! {
     static AUDIO_CACHE: RefCell<Option<HashMap<String, HtmlAudioElement>>> = RefCell::new(None);
+    /// iOS WebKit などで AudioContext が suspended のままになるのを防ぐ。ユーザー操作（実行ボタン）内で呼ぶ。
+    static AUDIO_CONTEXT: RefCell<Option<AudioContext>> = RefCell::new(None);
+}
+
+/// iOS WebKit 向け: ユーザー操作（実行ボタン押下）内で呼び、AudioContext を resume する。
+/// これによりオーディオが unlocked され、その後の HtmlAudioElement 再生が可能になることがある。
+pub fn unlock_audio_for_ios() {
+    AUDIO_CONTEXT.with(|cell| {
+        if cell.borrow().is_none() {
+            if let Ok(ctx) = AudioContext::new() {
+                let _ = ctx.resume();
+                *cell.borrow_mut() = Some(ctx);
+            }
+        } else {
+            if let Some(ref ctx) = *cell.borrow() {
+                let _ = ctx.resume();
+            }
+        }
+    });
 }
 
 /// ウェブアセンブリ起動時に呼び、各 MP3 をプリロードしてキャッシュする。

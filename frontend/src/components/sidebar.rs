@@ -48,6 +48,7 @@ pub fn sidebar() -> Html {
                     let state_for_runner = state.clone();
                     let on_execute = Callback::from(move |e: MouseEvent| {
                         e.stop_propagation();
+                        timer_runner::unlock_audio_for_ios();
                         let config = timer_to_run.clone();
                         let state = state_for_runner.clone();
                         let cancel_token = Rc::new(Cell::new(false));

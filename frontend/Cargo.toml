@@ -1,6 +1,6 @@
 [package]
 name = "nekotimer-frontend"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 
 [dependencies]
@@ -15,6 +15,7 @@ web-sys = { version = "0.3", features = [
     "HtmlElement",
     "HtmlInputElement",
     "HtmlAudioElement",
+    "AudioContext",
     "Window",
 ] }
 gloo-net = { version = "0.6", features = ["http"] }

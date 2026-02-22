@@ -1301,7 +1301,7 @@ dependencies = [
 
 [[package]]
 name = "nekotimer-backend"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "actix-cors",
  "actix-web",
@@ -1314,7 +1314,7 @@ dependencies = [
 
 [[package]]
 name = "nekotimer-frontend"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "gloo-dialogs 0.2.0",
  "gloo-net 0.6.0",
